@@ -3,6 +3,29 @@
 	<head>
 		<title>My Pensieve</title>
 	</head>
+<p>
+  <script>
+    dark_theme = false;
+    function toggle_dark_theme() {
+        dark_theme = !dark_theme;
+
+        links = document.getElementsByTagName('a');
+
+        if(dark_theme) {
+            document.body.className = "dark";
+            for(i = 0; i < links.length; i ++) {
+	        links[i].className = "dark";
+	    }
+	} else {
+	    document.body.className = "light";
+	    for(i = 0; i < links.length; i ++) {
+	        links[i].className = "light";
+	    }
+	}
+    }
+  </script>
+  <a href="#" onclick="toggle_dark_theme()">Toggle Dark Theme</a>
+</p>
 	<body>	
 <p>Welcome to my blog! I am Frederic from India. I am using this blog to save my thoughts.
 
