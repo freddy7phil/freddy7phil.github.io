@@ -1,0 +1,204 @@
+<!-- HTML generated using hilite.me --><div style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><table><tr><td><pre style="margin: 0; line-height: 125%">  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102</pre></td><td><pre style="margin: 0; line-height: 125%"><span style="color: #408080; font-style: italic">/*</span>
+<span style="color: #408080; font-style: italic"> * N1_UART.c</span>
+<span style="color: #408080; font-style: italic"> *</span>
+<span style="color: #408080; font-style: italic"> * Created: 22.12.2018 06:59:17</span>
+<span style="color: #408080; font-style: italic"> * Author : fredwin</span>
+<span style="color: #408080; font-style: italic"> */</span>
+
+<span style="color: #BC7A00">#include &lt;avr/io.h&gt;</span>
+<span style="color: #BC7A00">#include &lt;avr/sfr_defs.h&gt;</span>
+<span style="color: #BC7A00">#include &lt;avr/power.h&gt;</span>
+<span style="color: #BC7A00">#include &lt;stdio.h&gt;</span>
+<span style="color: #BC7A00">#include &lt;stdint.h&gt;</span>
+<span style="color: #BC7A00">#include &lt;stdlib.h&gt;</span>
+<span style="color: #BC7A00">#include &lt;string.h&gt;</span>
+<span style="color: #BC7A00">#define F_CPU 8000000UL	</span><span style="color: #408080; font-style: italic">//8 MHz frequency</span>
+<span style="color: #BC7A00">#define BAUD  9600</span>
+<span style="color: #BC7A00">#include &lt;util/setbaud.h&gt;</span>
+<span style="color: #BC7A00">#include &lt;util/delay.h&gt;</span>
+
+<span style="color: #408080; font-style: italic">/************************************************************************************</span>
+<span style="color: #408080; font-style: italic">** AVR_Init function:</span>
+<span style="color: #408080; font-style: italic">** - Start-up delay</span>
+<span style="color: #408080; font-style: italic">** - Initializes the I/O peripherals</span>
+<span style="color: #408080; font-style: italic">*************************************************************************************/</span>
+<span style="color: #B00040">void</span> <span style="color: #0000FF">AVR_Init</span>(<span style="color: #B00040">void</span>)
+{
+	<span style="color: #408080; font-style: italic">//Set the Clock Prescaler division factor to 1(F_CPU = 8MHz)</span>
+	clock_prescale_set(clock_div_1);
+
+	_delay_ms(<span style="color: #666666">750</span>);		<span style="color: #408080; font-style: italic">//Short pause after BNO055 Power-On Reset(Mandatory)</span>
+	DDRD <span style="color: #666666">|=</span> _BV(<span style="color: #666666">1</span>);		<span style="color: #408080; font-style: italic">//Set TX as output</span>
+	DDRD <span style="color: #666666">&amp;=</span> <span style="color: #666666">~</span>(_BV(<span style="color: #666666">0</span>));	<span style="color: #408080; font-style: italic">//Set RX as input</span>
+}
+
+<span style="color: #408080; font-style: italic">/************************************************************************************</span>
+<span style="color: #408080; font-style: italic">** USART Reference:</span>
+<span style="color: #408080; font-style: italic">** - ATmega32U4 Datasheet - Rev. CORP072610(Pg.186)</span>
+<span style="color: #408080; font-style: italic">** - AVR Microcontroller and Embedded Systems - Mazidi(Pg.395)</span>
+<span style="color: #408080; font-style: italic">** - Embedded C Programming and the Atmel AVR - Barnett(Pg.132)</span>
+<span style="color: #408080; font-style: italic">*************************************************************************************</span>
+<span style="color: #408080; font-style: italic">** To initialize the UART, the following steps are to be followed:</span>
+<span style="color: #408080; font-style: italic">** - Set the Baud rate(use &lt;util/setbaud.h&gt;, which depends on the macros F_CPU &amp; BAUD)</span>
+<span style="color: #408080; font-style: italic">** - Disable double speed(2x) mode</span>
+<span style="color: #408080; font-style: italic">** - Set the no. of data bits(8/9 bits), stop bit(1/2) and parity bit(None/Odd/Even)</span>
+<span style="color: #408080; font-style: italic">** - Set the USART mode(Synchronous/Asynchronous/Asynchronous 2x)</span>
+<span style="color: #408080; font-style: italic">** - Enable Receiver &amp; Transmitter(Set RXEN &amp; TXEN bits in UCSRB register)</span>
+<span style="color: #408080; font-style: italic">*************************************************************************************/</span>
+<span style="color: #B00040">void</span> <span style="color: #0000FF">UART_Init</span>(<span style="color: #B00040">void</span>)
+{
+	<span style="color: #408080; font-style: italic">//Set the BAUD rate(Ref. ATmega32U4 Datasheet Pg.189, Table 18-1)</span>
+	<span style="color: #408080; font-style: italic">//To hard-code the Baud rate, Ref. Tables 18-9 to 18-12 in Pages 210 - 213</span>
+	UBRR1 <span style="color: #666666">=</span> ((F_CPU <span style="color: #666666">/</span> (<span style="color: #666666">16UL</span> <span style="color: #666666">*</span> BAUD)) <span style="color: #666666">-</span> <span style="color: #666666">1</span>);
+
+	<span style="color: #408080; font-style: italic">//Disables 2x speed</span>
+	UCSR1A <span style="color: #666666">&amp;=</span> <span style="color: #666666">~</span>(_BV(U2X1));
+
+	<span style="color: #408080; font-style: italic">//Enable 8-bit character size, one stop-bit, no parity &amp; asynchronous mode</span>
+	UCSR1C <span style="color: #666666">|=</span> _BV(UCSZ11) <span style="color: #666666">|</span> _BV(UCSZ10);
+
+	<span style="color: #408080; font-style: italic">//Enable Transmitter &amp; Receiver</span>
+	UCSR1B <span style="color: #666666">|=</span> _BV(TXEN1) <span style="color: #666666">|</span> _BV(RXEN1);
+}
+
+<span style="color: #408080; font-style: italic">/************************************************************************************</span>
+<span style="color: #408080; font-style: italic">** UART_Tx function:</span>
+<span style="color: #408080; font-style: italic">** - Transmits the TWI data via the USB Serial</span>
+<span style="color: #408080; font-style: italic">** - The data is received &amp; displayed in a Hyperterminal</span>
+<span style="color: #408080; font-style: italic">*************************************************************************************/</span>
+<span style="color: #B00040">void</span> <span style="color: #0000FF">UART_Tx</span>(<span style="color: #B00040">unsigned</span> <span style="color: #B00040">char</span> data)
+{
+	loop_until_bit_is_set(UCSR1A, UDRE1);		<span style="color: #408080; font-style: italic">//Wait until buffer is empty</span>
+	UDR1 <span style="color: #666666">=</span> data;					<span style="color: #408080; font-style: italic">//Send TWI data via UART</span>
+}
+
+<span style="color: #B00040">void</span> <span style="color: #0000FF">UART_Put_String</span>(<span style="color: #B00040">char</span> <span style="color: #666666">*</span>s)
+{
+	<span style="color: #408080; font-style: italic">//Loop through entire string</span>
+	<span style="color: #008000; font-weight: bold">while</span>(<span style="color: #666666">*</span>s)
+	{
+	    UART_Tx(<span style="color: #666666">*</span>s);
+	    s<span style="color: #666666">++</span>;
+	}
+}
+
+<span style="color: #408080; font-style: italic">/************************************************************************************</span>
+<span style="color: #408080; font-style: italic">** Main function:</span>
+<span style="color: #408080; font-style: italic">** - Contains an endless loop</span>
+<span style="color: #408080; font-style: italic">** - Sets the BNO055 in NDOF mode and fetches the quaternion data</span>
+<span style="color: #408080; font-style: italic">*************************************************************************************/</span>
+<span style="color: #B00040">int</span> <span style="color: #0000FF">main</span>(<span style="color: #B00040">void</span>)
+{
+	AVR_Init();
+	UART_Init();
+
+	<span style="color: #408080; font-style: italic">//Endless Loop</span>
+	<span style="color: #008000; font-weight: bold">while</span>(<span style="color: #666666">1</span>)
+	{
+
+		UART_Put_String(<span style="color: #BA2121">&quot;Hello, world!</span><span style="color: #BB6622; font-weight: bold">\n</span><span style="color: #BA2121">&quot;</span>);
+		_delay_ms(<span style="color: #666666">500</span>);
+	}
+}
+</pre></td></tr></table></div>
