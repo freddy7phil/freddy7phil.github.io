@@ -4,9 +4,8 @@
 	<head>
 		<title>Frederic Philips's Pensieve</title>
  		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+        	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/monokai-sublime.min.css">
 	</head>
-	<center>
-
 		<center>
 		<a href="index.html"><font color="orange">Home</a></font>
 		|
@@ -33,23 +32,32 @@
 		<a href="publications.html"><font color="orange">Publications</a></font>
 		|
 		<a href="cv.html"><font color="orange">CV</a></font>
+		</center>
 
 	<body bgcolor="#00355F">	
 	
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/styles/default.min.css">
+
+	
+	<pre>
+    	<code class="c">
+			#include &lt;stdio.h&gt;
+			int main() 
+			{
+				// printf() displays the string inside quotation
+				printf("Hello, World!");
+				return 0;
+			}
+		</code>
+    </pre>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/highlight.min.js"></script>
 	<!-- and it's easy to individually load additional languages -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/languages/c.min.js"></script>	
-	
-	<pre><code class="language-c">
-	#include <stdio.h>
-	int main() 
-	{
-		// printf() displays the string inside quotation
-		printf("Hello, World!");
-		return 0;
-	}
-	</code></pre>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.2/languages/c.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+    
+    <script>
+    	hljs.initHighlightingOnLoad();
+		hljs.initLineNumbersOnLoad();
+    </script>
 
 	</body>
 
